@@ -36,7 +36,7 @@ python wips.py
 5. **Prevention (WIPS)**: the attacker's MAC is appended to `blocklist.txt` and logged
    to `alerts.log`. Later traffic from a blocked MAC is dropped without classifying.
 
-## Important limitations (say these on the poster)
+## Important limitations 
 
 - The data is **synthetic**, so the ~99.8% accuracy is optimistic. Real traffic is
   messier, so expect lower numbers on AWID3.
