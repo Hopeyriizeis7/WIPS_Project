@@ -65,3 +65,26 @@ disp.plot(cmap="Blues")
 plt.title("Confusion matrix")
 plt.savefig("confusion_matrix.png", dpi=150)
 plt.show()
+
+# Pretend the test rows are live traffic arriving one at a time
+blocked = set()   # MACs we have blocked
+
+test_rows = X_test.copy()
+test_rows["mac"] = [f"AA:BB:CC:00:00:{i:02d}" for i in range(len(test_rows))]  # fake MACs
+
+for _, row in test_rows.iterrows():
+    mac = row["mac"]
+    if mac in blocked:
+        continue                      # already blocked, ignore
+
+    features = pd.DataFrame([row[["frames_per_sec", "deauth_per_sec", "signal_strength"]]])
+    result = model.predict(features)[0]
+
+    if result == 1:                 # which label means attack?
+        print(f"[ALERT] Deauth flood from {mac} ({row['deauth_per_sec']:.0f} deauth frames/sec)")
+        blocked.add(mac)
+        with open("blocklist.txt", "a") as f:
+            f.write(mac + "\n")
+        print(f"        -> ACTION: {mac} blocked")
+
+print(f"\n{len(blocked)} attackers blocked")
