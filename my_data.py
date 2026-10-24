@@ -26,3 +26,22 @@ attack = pd.DataFrame({
 data = pd.concat([normal, attack]).sample(frac=1, random_state=1).reset_index(drop=True)
 print(data.head(10))
 print(data["label"].value_counts())
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+# X = the inputs the model looks at, y = the answer we want it to predict
+X = data[["frames_per_sec", "deauth_per_sec", "signal_strength"]]
+y = data["label"]
+
+# Hold back 25% of rows that the model never sees during training
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42, stratify=y
+)
+
+# Create and train the Random Forest
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+print("Training rows:", len(X_train))
+print("Test rows:", len(X_test))
