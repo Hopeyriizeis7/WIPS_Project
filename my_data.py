@@ -45,3 +45,23 @@ model.fit(X_train, y_train)
 
 print("Training rows:", len(X_train))
 print("Test rows:", len(X_test))
+
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
+# Ask the trained model to label the 250 rows it has never seen
+predictions = model.predict(X_test)
+
+# Compare its answers with the true labels
+acc = accuracy_score(y_test, predictions)
+print(f"Accuracy: {acc * 100:.2f}%")
+
+cm = confusion_matrix(y_test, predictions)
+print(cm)
+
+# Draw it
+disp = ConfusionMatrixDisplay(cm, display_labels=["normal", "attack"])
+disp.plot(cmap="Blues")
+plt.title("Confusion matrix")
+plt.savefig("confusion_matrix.png", dpi=150)
+plt.show()
