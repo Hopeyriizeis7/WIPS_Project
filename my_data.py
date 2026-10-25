@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from datetime import datetime
 
 rng = np.random.default_rng(42)
 n_normal = 800
@@ -77,6 +78,7 @@ def run_live_detection(model, X_test):
     blocked = set()  # MACs we have blocked
 
     open("blocklist.txt", "w").close()
+    open("alerts.log", "w").close()
     test_rows = X_test.copy()
     test_rows["mac"] = [f"AA:BB:CC:00:00:{i:02d}" for i in range(len(test_rows))]  # fake MACs
 
@@ -94,6 +96,8 @@ def run_live_detection(model, X_test):
             with open("blocklist.txt", "a") as f:
                 f.write(mac + "\n")
             print(f"        -> ACTION: {mac} blocked")
+            with open("alerts.log", "a") as f:
+                f.write(f"{datetime.now()} ALERT: deauth flood from {mac} ({row['deauth_per_sec']:.0f} deauth/sec)\n")
 
     print(f"\n{len(blocked)} attackers blocked")
 
