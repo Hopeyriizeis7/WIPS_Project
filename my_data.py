@@ -6,6 +6,7 @@ from datetime import datetime
 rng = np.random.default_rng(42)
 n_normal = 800
 n_attack = 200
+n_borderline = 50
 
 def make_data():
     # Normal devices
@@ -23,7 +24,13 @@ def make_data():
         "signal_strength": rng.normal(-55, 10, n_attack),
         "label": 1,
     })
-
+    #borderline
+    borderline = pd.DataFrame({
+        "frames_per_sec": rng.integers(40, 50, n_borderline),
+        "deauth_per_sec": rng.integers(15, 40, n_borderline),
+        "signal_strength": rng.normal(-65, 10, n_borderline),
+        "label": 1,
+    })
     # Combine and shuffle
     data = pd.concat([normal, attack]).sample(frac=1, random_state=1).reset_index(drop=True)
     print(data.head(10))
@@ -35,7 +42,7 @@ def split_data(data):
     from sklearn.ensemble import RandomForestClassifier
 
     # X = the inputs the model looks at, y = the answer we want it to predict
-    X = data[["frames_per_sec", "deauth_per_sec", "signal_strength"]]
+    X = data[["frames_per_sec", "deauth_per_sec", "signal_strength", "deauth_ratio"]]
     y = data["label"]
 
     # Hold back 25% of rows that the model never sees during training
@@ -87,7 +94,7 @@ def run_live_detection(model, X_test):
         if mac in blocked:
             continue  # already blocked, ignore
 
-        features = pd.DataFrame([row[["frames_per_sec", "deauth_per_sec", "signal_strength"]]])
+        features = pd.DataFrame([row[["frames_per_sec", "deauth_per_sec", "signal_strength", "deauth_ratio"]]])
         result = model.predict(features)[0]
 
         if result == 1:  # which label means attack?
@@ -101,8 +108,13 @@ def run_live_detection(model, X_test):
 
     print(f"\n{len(blocked)} attackers blocked")
 
+def load_real_data(path="awid3_features.csv"):
+    data = pd.read_csv(path)
+    print(data["label"].value_counts())
+    return data
+
 if __name__ == "__main__":
-    data = make_data()
+    data = load_real_data()          # was: data = make_data()
     X_train, X_test, y_train, y_test = split_data(data)
     model = train_model(X_train, y_train)
     evaluate_model(model, X_test, y_test)
