@@ -97,5 +97,5 @@ I used Claude (Anthropic) as a coding assistant throughout this project,
 working interactively in PyCharm. Claude explained the relevant Wi-Fi
 security concepts, proposed the pipeline and feature-engineering approach
 for AWID3's raw packet captures, and guided me step by step through writing
-and debugging each function myself. Every line of code was written and run
+and debugging each function myself. Every line of code was written (with the assistance of claude)and run
 by me, and I can explain how each part works during the live demonstration.
