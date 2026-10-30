@@ -1,51 +1,45 @@
-# WIPS prototype: deauthentication flood detection
+Opens in your browser. Click "Start Live Detection" to watch alerts stream
+in and attackers get blocked in real time.
 
-A small Wireless Intrusion Prevention System that uses a scikit-learn Random Forest
-to label Wi-Fi traffic as normal or a deauth flood, raises an alert, and blocks the
-offending MAC address.
+## Results
 
-## Files
+- **Synthetic data** (1,050 rows, built to be cleanly separable):
+  100% accuracy.
+- **Real AWID3 data** (1,616 feature rows extracted from 5 Deauth capture
+  files, 38 real attack windows): 99.01% accuracy, confusion matrix
+  `[[393, 2], [2, 7]]` on a 404-row test set.
 
-| File | What it does |
-|---|---|
-| `make_data.py` | Creates `traffic.csv`, a **synthetic** dataset (one row = one device in one second) |
-| `wips.py` | Trains the model, reports accuracy and confusion matrix, then replays traffic and alerts/blocks |
-| `traffic.csv` | Generated dataset |
-| `confusion_matrix.png` | Output: confusion matrix for the poster |
-| `feature_importance.png` | Output: which features the model relied on |
-| `alerts.log` | Output: one line per alert |
-| `blocklist.txt` | Output: MAC addresses the WIPS blocked |
+## How the AWID3 features were built
 
-## Run it
+AWID3 provides one row per captured packet (254 columns). `load_awid3.py`:
+1. Loads only the columns needed (sender MAC, timestamp, frame subtype,
+   signal strength, ground-truth label) instead of all 254.
+2. Groups packets into (device, second) windows.
+3. Computes `frames_per_sec`, `deauth_per_sec` (frames with subtype 12),
+   mean `signal_strength`, and `deauth_ratio` (deauth frames as a fraction
+   of all frames that second) per window.
+4. Labels a window "attack" if any packet in it carries AWID3's ground-truth
+   attack label.
 
-```
-pip install pandas scikit-learn matplotlib numpy
-python make_data.py
-python wips.py
-```
+## Limitations
 
-## How it works
+- The real-data sample is small and imbalanced (38 attacks of 1,616 rows,
+  2.4%), consistent with how rare real attack windows are, but meaning the
+  test set's attack count is limited.
+- "Blocking" only appends a MAC to `blocklist.txt`. A deployed WIPS would
+  need to enforce this on the access point or wireless controller.
+- Classifies one second of traffic at a time, with no memory of a device's
+  recent history.
+- Source MAC addresses can be spoofed (seen in this data: attack packets
+  sourced from the broadcast address `ff:ff:ff:ff:ff:ff`), so a production
+  system should combine this with signal and sequence-number analysis, and
+  802.11w where available.
 
-1. **Features**: each row has `frames_per_sec`, `deauth_per_sec`, `deauth_ratio`,
-   `mean_rssi` (signal strength), `rssi_std` (signal variation) and `unique_targets`.
-2. **Model**: a Random Forest (100 decision trees voting) trained on 75% of the data.
-3. **Evaluation**: tested on the 25% the model never saw. Accuracy and the confusion
-   matrix are printed and saved as a PNG.
-4. **Detection**: unseen rows are replayed one at a time like a live sniffer feed.
-   Each is classified; an attack raises an `[ALERT]`.
-5. **Prevention (WIPS)**: the attacker's MAC is appended to `blocklist.txt` and logged
-   to `alerts.log`. Later traffic from a blocked MAC is dropped without classifying.
+## AI assistant use
 
-## Important limitations 
-
-- The data is **synthetic**, so the ~99.8% accuracy is optimistic. Real traffic is
-  messier, so expect lower numbers on AWID3.
-- "Blocking" only writes the MAC to a file. A real WIPS would enforce it at the access point.
-- It classifies each device-second independently and does not track behaviour over time.
-
-## Next step: real data (AWID3)
-
-Replace `traffic.csv` with features extracted from AWID3. `wips.py` only needs these
-columns: `src_mac`, the six feature columns, and `label` (0 normal, 1 attack).
-If AWID3 column names differ, edit the `FEATURES` list in `wips.py`.
-
+I used Claude (Anthropic) as a coding assistant throughout this project,
+working interactively in PyCharm. Claude explained the relevant Wi-Fi
+security concepts, proposed the pipeline and feature-engineering approach
+for AWID3's raw packet captures, and guided me step by step through writing
+and debugging each function myself. Every line of code was written and run
+by me, and I can explain how each part works during the live demonstration.
