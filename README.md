@@ -1,3 +1,59 @@
+# WIPS: Machine-Learning Deauthentication Flood Detection and Prevention
+
+A Wireless Intrusion Prevention System (WIPS) prototype that classifies Wi-Fi
+traffic with a Random Forest and automatically blocks devices flooding
+deauthentication frames.
+
+**Author:** Hope Mbugua (182174) — BCNS, Wireless and Mobile Security, Strathmore University
+
+## What it does
+
+- Reads Wi-Fi traffic features (frame rate, deauth rate, signal strength,
+  deauth ratio) for a device in a given second.
+- Trains a Random Forest classifier (scikit-learn) to label traffic normal
+  or attack.
+- Reports accuracy and a confusion matrix.
+- Replays traffic live, raises an alert on a detected deauth flood, and
+  blocks the offending MAC address (the WIPS action).
+- Includes a live Streamlit dashboard for demonstrations.
+
+## Files
+
+| File | What it does |
+|---|---|
+| `my_data.py` | Main pipeline: train, evaluate, live-detect, alert, block |
+| `load_awid3.py` | Extracts per-device-per-second features from raw AWID3 packet captures |
+| `dashboard.py` | Streamlit dashboard: stats + live detection feed |
+| `awid3_features.csv` | Generated real-data feature set (not tracked in git — regenerate it, see below) |
+| `blocklist.txt` | Output: MAC addresses blocked by the most recent run |
+| `alerts.log` | Output: timestamped alert log |
+| `confusion_matrix.png` | Output: saved confusion matrix chart |
+
+## Setup
+
+pip install pandas numpy scikit-learn matplotlib streamlit
+## Running it
+
+**1. Train and evaluate on synthetic data:**
+Edit the `if __name__ == "__main__":` block in `my_data.py` to call
+`make_data()` instead of `load_real_data()`, then:
+
+python my_data.py
+**2. Train and evaluate on real AWID3 data:**
+
+First, regenerate the feature set from raw AWID3 captures. Place the
+`Deauth_*.csv` files you're using (from the AWID3-CSV "1.Deauth" folder,
+[University of the Aegean](https://icsdweb.aegean.gr/awid/awid3)) in this
+folder, list them in the `files = [...]` line in `load_awid3.py`, then:
+
+python load_awid3.py
+This produces `awid3_features.csv`. Then, with `load_real_data()` set in
+`my_data.py`'s main block:
+
+python my_data.py
+**3. Launch the live dashboard:**
+
+streamlit run dashboard.py
 Opens in your browser. Click "Start Live Detection" to watch alerts stream
 in and attackers get blocked in real time.
 
