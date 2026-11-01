@@ -99,3 +99,12 @@ security concepts, proposed the pipeline and feature-engineering approach
 for AWID3's raw packet captures, and guided me step by step through writing
 and debugging each function myself. Every line of code was written (with the assistance of claude)and run
 by me, and I can explain how each part works during the live demonstration.
+
+## Note on data files
+
+Raw AWID3 capture files and the generated `awid3_features.csv` are not
+included in this repository (excluded via `.gitignore`), due to their size
+and AWID3's dataset terms. Running `python my_data.py` with `make_data()`
+(synthetic data) works immediately with no external files. The real-data
+results shown in the poster and demo were produced locally with AWID3
+files obtained directly from the dataset's maintainers.
